@@ -1,0 +1,376 @@
+main components of wireless systems:
+
+- transmitter
+- receiver
+- communication targets sharing information from one system to another
+- form: `source --(message signal)--> transmitter --(transmitted signal)--> channel --(received signal)--> receiver --(estimate of message signal)--> destination`
+
+how? with packets
+
+- break data into buts and bytes and send those. or, send a collection of bits and bytes as packets.
+  how do we send it?
+- may not be able to send direct to destination
+- utilize gateway nodes that know many other nodes and can calculate best paths
+- received power Pᵣ ∝ 1/d²
+- we will only worry about noise from the final base station to the destination
+  - all other noise will be accounted for by each base station
+- how do we know the best routes, so we're not using more forwarders than we need and effecting the signal?
+  - we'll worry about it later
+
+what if two nodes need to send packets at the same time?
+
+- medium access control:
+  - time/freq/code division multiple access
+    - contention-free
+    - FDMA is the most advanced one
+  - carrier sense multiple access
+    - contention-based
+    - listen to medium before sending
+    - only send when medium is silent
+  - ethernet, wireless LAN use CSMA
+
+wireless is everywhere, but there are challenges
+
+heterogeneous = uses different means (e.g. freqs) to transmit
+
+explosive growth of wireless systems in the last 20 years + proliferation of laptops, mobile phones ⇛ bright future for wireless networks
+
+challenges of wireless communications
+
+- single points of failure
+- energy efficiency
+- spectral efficiency
+  - there are finite bandwidths
+- unreliability
+  - unpredictable and difficult
+- mobility
+  - wireless signals experience random fluctuations
+  - network needs to locate users
+  - devices are moving quickly which can effect signals
+- security
+  - airwaves are easy to intercept and look in on
+
+noise:
+
+recall the form of wireless communication:
+`source --(message signal)--> transmitter --(transmitted signal)--> channel --(received signal)--> receiver --(estimate of message signal)--> destination`
+
+- between the transmitter and receiver, the message will be encoded. it is decoded by the receiver.
+- the channel introduces noise. we cannot avoid it.
+  - external: interference from nearby channels, humans, natural...
+  - internal: thermal noise,  random emission...
+  - we measure the signal-to-noise power ratio
+- if we're using sines and cosines to transmit, the noise might shift one into another or otherwise distort them
+  - we can assume we're transmitting binary, where 1 = cos, 2 = sin
+- instead, we decide that and incoming signal >0 = 1, and <0 = 0
+  - if we know 0 or 1 is more common, we change that cutoff
+- if we're transmitting more individual values, we split the frequencies into more different signals to accommodate it
+  - 64 bits at a time ==> 64 different signals
+  - you're more likely to lose some of it to noise, though
+- t = original signal M + noise N
+
+from the base station you may have either a circle or hexagon (or maybe square) with a radius of 2-10 km which is how far the signal can reach
+- we can't crank up the power too high due to health concerns and it might interfere with other signals
+	- also it required so much power
+- in one cell area, all subscribers are served by the same base station (BS)
+- when two base stations / cell areas are far enough away, they can use the same freqs without worry of interference
+- if a user is sending within their own cell, the freqs might overlap and be interfered with
+- we need a seamless transition in comms when moving from one cell to another
+	- we don't really have it; ever had a phone call drop on the road?
+- one unique code is assigned to each user by the BS, used to encode then decode the message
+	- each user needs the codebook to be able to decode
+- now we use many smaller BSs to cover th same area, using hexagonal cells so they tesselate
+
+
+we will start with one cell area, one BS, and one receiver
+- what is the received power Pr?
+- what is the capacity C in bits/sec?
+- in free space, c = wavelength \* freq f where c = speed of light 3x10^8
+- if through materials other than air, v = wavelength \* freq f
+- any EM wave has EM field lines E and B which are orthogonal
+- imagine an open circuit, where electricity still flows. how?
+	- maxwell says there is current transmitted only while our signal changes from off to on
+- most real transmitting freqs fall into microwave freqs
+	- 850 MHz, 1.9 GHz, 2.4 GHz, 5 GHz, 39 GHz
+- SINR = signal-to-interference-noise ratio or SIR = signal-to-interference ratio
+	- = Pr / (power of noise P_N + power of interference P_I)
+
+different advantages:
+- low freq..
+	- passes obstacles easily, falls of at inverse-square
+	- easy to generate
+- hi freq...
+	- prone to absorption by rain, reflected by obstacles
+	- travels for hundreds of miles
+	- need line of sight, narrowly focused
+- infrared
+	- cannot travel through obstacles
+
+freq-domain concepts
+- fundamental freq: all other freqs are multiples of it
+- spectrum: range of freqs that a signal contains
+- absolute bandwidth: width of the spectrum of a signal
+- effective bandwidth: meant by just "bandwidth." narrow band of freqs the signal's energy is concentrated in
+	- the space where maybe 90% of the signal is contained
+	- if absolute bw is 400 MHz, we can make effective bw 160 MHz, where 90% of our signal is...
+	- but maybe we still need to cut it down. we can lose another 2% and make it 150 MHz, which in this case is okay
+
+three propagation modes
+- ground wave
+  - used for low-range; can hit the earth at long range
+  - max distance is based on Tx signal power and freq it uses
+- sky wave: 300 KHz - 30 MHz
+  - uses ionosphere and earth as reflector
+  - when a wave hits a reflector, it splits into a transmitted (T = 1+R) and reflected component (R)
+    - how they split is based on the permittivity, permeability, and conductance of the material
+    - this means the right waves can bounce off the ionosphere, where we maximize R and minimize T
+    - in air, v = 1/√(Σₒμₒ) 
+- space wave >30 MHz
+  - line of sight necessary
+  - max LOS distance dₘ = √(2Rhₜ) + √(2Rhᵣ)
+    - if needed we put a repeater in the sky 
+- frequency is the main difference
+- propagation in free space with no obstacles is ideal
+
+2.5 and 5g can be used by anybody
+
+Tx sends power Pₜ over distance d to Rx. what is Pᵣ?
+
+- path loss
+  - Power = dBm drops off by an exponent
+    - we measure the decrease in power over distance to find the path loss exponent
+  - Pᵣ = GᵣGₜPₜ/((4πd/λ)²)
+    - transmitted power Pₜ ***in Watts***
+    - λ = c/f, for constant c = 3\*10⁸ and f in Hz
+    - d = difference between heights of Tx and Rx antennae in meters
+    - we assume Rx's channel gain Gᵣ = Tx's channel gain Gₜ = 1
+- channel gain
+  - isotropic antenna: equal power in all direction -> no antenna gain
+  - directed/high gain antenna -> 
+  - we use dB for these because it's log scaled
+  - 10log(P mW/ 1 mW) dB = 10logP + 30 dBm
+- example: fc = 900 MHz, r = 0.5 km = 500m, nondirectional antennas
+  - Pₜ = 20W. find Pᵣ
+    - Pᵣ = GᵣGₜPₜ/((4πd/λ)²) = Pₜ(λ/4πd)²
+    - λ = c/f, we know f = 9*10⁸ and constant c = 3\*10⁸ so λ = 1/3
+    - Pᵣ = Pₜ(λ/4πd)² = 20((1/3)/4π500)² = 5.5*10⁻⁸W
+  - find a Pₜ such that Pᵣ = 1μW
+    - 1μW = 1*10⁻⁶ = Pₜ(λ/4πd)² = Pₜ((1/3)/4π500)² etc.
+    - Pₜ W = 10logPₜ dB
+
+![alt text](image.png)
+- isotropic antennae ⇛ G=1
+
+![alt text](image-1.png)
+- $P \propto 1/d^4$ 
+- critical distance $d_c$ is where $P_r \propto P_tK/d^2$
+
+![alt text](image-2.png)
+- Two-ray model: • The cutoff distance above which free space model is not applicable can be determined using the following expression:
+- Since smaller cells are more desirable — both to increase capacity and reduce transmit power — cell radii are typically much smaller than dc. 
+The signals from proximal reflectors 
+The signals from intermediate reflectors 
+The signals from distant reflectors 
+- Delay spread: When a signal propagates from a transmitter to a receiver, the signal suffers one or more reflections so that the path becomes indirect, and this forces radio signals to follow different paths. 
+
+
+![alt text](image-3.png)
+- when we send two rays, one will hit before the other. assuming they travel the same speed, we want to know the difference in their distances traveled. dividing by c lets us know the difference in their speeds.
+- d is the positive difference in heights
+- delay of a two-ray model = $(x+x'-l)/c$
+  - delay by LOS ray 1 = $t_1 = l/c$
+    - linear distance traveled by ray 1 = $l = \sqrt{(h_t-h_r)^2+d^2}$, where d is the ground distance (x component)
+  - delay by bounced ray 2 = $t_2=(x+x')/c$
+  - which means delay speed = $t_2-t_1 = (x+x')/c - l/c$
+- $P_r = P_tG_tG_r(\frac{h_th_r}{d^2})^2$
+- $d_c = 4\pi h_th_r/\lambda$
+- this is the two-ray model; one gets bounced of the ground and the other is direct in line-of-sight.
+- isotropic antenna = omni-directional antenna $\implies G_r=G_t=1$
+- when $d < d_c$ we say we're in free space, and we'll use the one-ray model
+  - which means $P_r = P_tG_RG_t(\frac{\lambda^2}{(4\pi d)^2})$
+- when $d>d_c$ 
+  - $P_r = P_t(\frac{h_th_r}{d^2})^2$
+- $K db = 20log_{10}\frac{\lambda}{4\pi d_0}$
+- K is a unitless constant that depends the antenna characteristics and the average channel attenuation
+- $d_0$ is a reference distance for the antenna far field
+- $\gamma$ is the path-loss exponent$
+- common path-loss exponents
+  - ![common path-loss exponents](image-4.png)
+- $P_r \text{ dbm} = P_t\text{ dbm} + K \text{ db} - 10\gamma log_{10}[d/d_o]$
+- signal-noise ratio $SNR = P_r/P_n$ where all units are in dB (i.e. log scale)
+
+
+homework 1:
+- $P_r = P_t K (d_0/d)^\gamma$
+- dBm to watt: $\frac{10^{P_{(dBm)}/10}}{1000} = P_{(W)}$
+- watt to dBm: $10log_{10}(1000*P_{(W)}) = P_{(dBm)} = 10log_{10}(P_{(W)})+30$
+- dBm to dB: $P_{(dB)} = P_{(dBm)}+30$
+- dB to dBm: $P_{(dBm)} = P_{(dB)}-30$
+- Given $P$ in dB, $P_{(mW)} = 10^{P_{(dB)}/10}$
+- Free-space path loss $P_L\ (dB) = 20log(d)-20log(\lambda)+20log(4\pi)$
+  - for distance from Rx to Tx $d$ in m, wavelength $\lambda$ in m, and all logs are base-10
+  - if you have freq $f$ in Hz then $P_L = 20log(d)+20log(f)+20log(\frac{4\pi}{c})$ with speed of light $c = 3*10^8$ m/s
+  - path loss is in dB
+- delay spread $\tau = \frac{x+x'-l}{c}$ in seconds
+  - for speed of light $c = 3*10^8$ m/s
+  - delay by LOS ray 1 = $t_1 = l/c$
+    - distance traveled by LOS ray 1 $l = \sqrt{(h_t-h_r)^2+d^2}$, where d is the ground distance (x component) and for outside $h_t, h_r$
+  - delay by reflected ray 2 = $t_2=(x+x')/c$
+    - distance traveled by reflected ray 2 $x+x' = \sqrt{(h_t+h_r)^2+d^2}$ for inside $h_t, h_r$
+  - all together, $\tau = \frac{\sqrt{(h_t+h_r)^2+d^2}-\sqrt{(h_t-h_r)^2+d^2}}{c}$
+- in the two-ray model, $P_r = P_tG_tG_r(\frac{h_th_r}{d^2})^2$
+  - given $P_t, P_r$ are in W and tower heights $h_t, h_R$ and distance
+
+
+![quiz](image-5.png)
+- the center tower can receive interference from either the left or right
+- within each cell, $P_r = P_t\frac{G_tG_r\lambda^2}{(4\pi)^2}\frac{1}{d^2} \implies P_r = \frac{P_t K}{d^2}$ because $K = (\frac{\lambda}{4\pi})^2$
+- each cell is a square with sides of 2 km
+- we need $SIR (db) \geq 20 db \implies SIR \geq 100 \implies \frac{P_r}{P_I} \geq 100$
+- interference between towers, given distance $d_2$ between them, is $P_I = \frac{P_tK}{d_2^2}$ 
+- we want to minimize $P_r$ and maximize $P_I$ so $\frac{(P_r)_{min}}{(P_I)_{max}} \implies \frac{PK\frac{1}{d_{max}^2}}{2PK\frac{1}{d^2_{max}}}$
+  - why 2? there is one interference signal coming from each other tower. ${P_I}_{left} + {P_I}_{right} = 2 (\frac{PK}{d^2_{min}})$
+- we can make $\frac{{d_2^2}_{min}}{2{d_1^2}_{max}} \geq 100$
+  - max distance from the center of a square is ${d_1}_{max} = \sqrt{2}$
+- $\implies {d_2^2}_{min} \geq 400 \implies {d_2^2}_{min} \geq 20 km$
+- i.e. physical distance between the center of each cell (i.e. the base station) and the transmitter
+- part b:
+  ![quiz part b](IMG_5609.JPG)
+  - calculate $d_{min}$ then add 1 to it
+
+
+all of our models thus far have been deterministic (free-space, two-ray, simplified path loss)
+- but we can't always have that
+- multipath signals can be attenuated, delayed, phase-shifted, freq-shifted
+- signals will arrive at different times
+  - Rx has a time window, and it takes the average of all signals received in that time frame
+- this introduced randomness
+- the statistical characterization of the random multipath channel is based on its time-varying impulse response
+- fluctuations happen due to a change in amplitude or phase, or multipath delays
+- fading refers to time variation of received signal power caused by changes in the transmission medium or path(s).
+  - propagation in multipath channels depends on the actual environment and LOS obstacles
+- possible reactions to obstacles:
+  - reflection: λ is smaller than object
+  - diffraction: occurs at the edge of impenetrable body
+  - scattering: λ comparable to size of object
+- multipath fading:
+  - unwanted effect of multipath propagation where time-delayed multipath signals arrive at different phases
+  - weaken signal strength: phase addition/subtraction
+  - intersymbol interference: one symbol interfered with subsequent signals
+    - caused by delay spread
+    - limits the max symbol rate of a digital multipath channel
+- if the demodulator synchronizes to the LOS signal component, which has smallest delay $\tau_0$ then the delay spread is a constant $T_m = max_i[\tau_i - \tau_0]$
+- ina  time-dispersive medium, transmission rate R for digital transmission is limited by delay spread $R < \frac{1}{2\tau_d}$
+- demodulator deconstructs and retrieves the original signal
+  - shifts the freqs from band pass
+
+exercise
+- LOS $t_0 =23 ns$, other routes $t_1 = 4.8 ns, t_2 = 67 ns$.
+- delay spread is the total range of these times, so $\tau = t_2 - t_0 = 67-23 = 44 ns$
+
+don't forget the randomness
+- for random variables A, B we assume capture signal A, B's randomness
+- $r_s(t) = A(t)cos(\omega t) + B(t)sun(\omega t)$
+- $r_s(t) = C(t)sun(\omega t + f(t))$
+  - where $C = \sqrt{A(t)^2 + B(t)^2}$ (Rayleigh distribution) and $f(t) = tan^{-1}(\frac{B(t)}{A(t)})$ (Uniform distribution)
+    - Rayleigh is similar to gaussian distribution, but is dependent on σ: $\frac{z}{\sigma^2}exp[-\frac{z^2}{2\sigma^2}],\ z\geq 0$
+    - $\sigma = \sqrt{P}$ where P is the average power measured
+- phase shift and randomness are functions of time
+- if z is Rayleigh distributed and its square is exponentially distributed
+- $P_{Z^2}(x) = \frac{1}{\bar{P_r}}e^{-x/2\sigma^2} = \frac{1}{\bar{P_r}}e^{-x/2\sigma^2} ,\ x\geq 0;\ = \frac{1}{2\sigma^2}e^{-x/\bar{P_r}}$
+
+exercise:
+- consider a channel with Rayleigh fading and average received power of -10 dB. Find the outage probability that the received power is below -20dBm.
+- $f = \frac{1}{\bar{P}}e^{-x/\bar{P}}$ when $\bar{P} = -10 db$
+- $P(P_R < x_{th}) = \int_0^{x_{th}}f_x dx = \int_0^{x_{th}} \frac{1}{\bar{P}}e^{-x/\bar{P}} dx = \frac{1}{\bar{P}}([x^{-x/P}(\frac{-1}{P})]|_0^{x_{th}})$
+- $x_{th} = -20 db \implies x_{th} = 0.01 W$
+- $\bar{P} = -10 db \implies \bar{P} = 0.1 W$
+- $P_e = 1-e^{-\frac{0.01}{0.1}}$
+- probability of an outage $P_{out} = 1-e^{-P_{th}/\bar{P}}$ with all Powers in Watts
+  - $P_{th}$ is the upper bound we want to check against, $\bar{P}$ is the 
+- consider a channel with Rayleigh fading and average received power of 20 dBm. Find the outage probability that the received power is below 30dBm.
+  - $P_{th} = 30 dBm = 1W;\ \bar{P} = 20dBm = 0.1 W$
+  - $P_e = 1-e^{-\frac{1}{0.1}} \approx 1 = 100\%$
+- suppose we have an application that limits power outage probability to .01 for the threshold $P_0 = -80 dBm$. for Rayleigh fading, what value of the average signal power is required?
+
+
+wireless channel capcity
+- maximum data rate that can be transmitted over a communication channel without error
+- one Tx is sending multiple difference signals to multiple different Rx
+- we just want to know the maximum rate we can send to each Rx (over their respective channels)
+- $y[i] = x[i] + n[i]$
+  - $x[n]$ is signal
+  - $n[i]$ is noise
+- Shannon-Hartley Theorem = Shannon Formula: $C = Blog_2(1+\frac{S}{N})$
+  - C: channel capcity in bits/sec
+    - $C \not{\propto} B$
+  - B: bandwidth (Hz)
+  - S: Signal power
+  - N: Noise power
+    - dependent on bandwidth
+    - $P_N = N_0B$
+      - $N_0$ is power spectral density
+      - B is bandwidth
+  - or perhaps $C = Blog_2(1+SNR)$
+    - where $SNR = \frac{P_R}{P_N} = \frac{P_R}{N_0B}$
+  - recall that the log scale flattens out after a certain threshold
+    - doubling power does not double capacity
+  - $SNR_{linear} = \frac{P_{signal}}{P_{noise}}$
+  - $SNR_{dB} = 10log_{10}\frac{S}{N}$
+- with low SNR, we need to increase B for best increase of channel capacity (because B is in linear scale)
+- with high SNR, C increases slowly (due to SNR's log scaling)
+- fading occurs due to Rayleigh fading
+  - capacity becomes a random variable
+  - Ergodic capacity (average/expected value) $\mathbb{E}$ is considered for fast fading, so channel capacity $C = \mathbb{E}(Blog_2(1+\gamma))$
+    - $\gamma$ is SNR here
+  - $y[i] = h[i]x[i] + n[i]$ for fading coefficient $h[i]$
+      - h changes between intervals of time; so it can be considered a constant during certain intervals, then it changes its value at the next one.
+      - this gives different Cs for each interval
+      - this isn't exactly realistic but we can use it
+- block fading
+  - a channel model where the fading is constant over a block of transmitted symbols but it changes independently from one block to another
+    - static within a block
+    - random across a block
+    - useful for modeling *slow*-moving users or *slowly*-varying environments
+  - now we need to call $y_i = h_bx_i + n_i$ for $i \in \text{block } b$
+    - $y_i$ is the ith received symbol
+    - $x_i$ is the ith transmitted symbol
+    - $h_b$ is the fading coefficient for block b
+    - $n_i$ is the noise on the ith symbol
+  - so $C_i + Blog_2(1+\gamma_i)$
+  - we find $C_i$ for all blocks
+  - to approximate $C$ we get $C_{avg} = $
+    - we can't take a regular average
+    - instead $C_{avg} = p_1C_1 + p_2C_2 + \dots + p_NC_N$
+    - where $p$ is the percent of time for which $C=C_i$
+- we can know capacity if CSI, channel state information (all $h[i]$ and $P_i$) are known by receiver
+- we cannot optimize or change power
+- ergodic capacity: average over the distribution of $\gamma = SNR$
+- only receiver knows instantaneous SNR, so data rate Txed is constant
+  - in this case our optimization: if Tx knows all CSI, we can send more power when h is high and less when it's low
+- exercise 1
+  - consider a flat-fading channel with iid channel fading coefficient h[i] which can take three possible values: $g_1 = 0.1\ (p_1 =0.1), g_2 = 0.7\ (p_2 = 0.5), g_3 = 0.95\ (p_3 = 0.4)$. $P_T = 10 mW = 10\times 10^-3 W, N_0 = 10^{-9} W/Hz, B=30kHz=30\times 10^3 Hz$
+    - $y[i] = h[i]x[i] + n[i]$ where $g[i] = (h[i])^2$
+  - find Shannon capacity when Rx knows instantaneous g[i] but not Tx.
+  - $\gamma_1 = \frac{P_{r_1}}{P_N} = \frac{g_1P_t}{N_0 B} = \frac{0.1 * 10\times 10^{-3}}{10^{-9}*30\times 10^3} = 66.7$
+  - $C_1 = Blog_2(1+\gamma_1) = 30\times 10^3 log_2(1+66.7) = 182.4 Kbps$
+    - note Kbps = kilobits/sec
+  - calculate the same for the other two blocks
+  - $C_{avg} = p_1C_1 + p_2C_2 + p_3C_3 = whatever$
+- $C_{avg} \leq \mathbb{E}(Blog_2(1+\gamma)) = Blog_2(1+\bar{\gamma})$
+  > the Shannon capacity of a fading channel with receiver CSI is always less than the Shannon capacity of an AWGN channel with the same average SNR
+- exercise 2
+  - consider a flat-fading channel with iid channel fading coefficient h[i] which can take three possible values: $g_1 = 0.2\ (p_1 =0.6), g_2 = 0.7\ (p_2 = 0.3), g_3 = 0.95\ (p_3 = 0.1)$. $P_T = 10 mW = 10\times 10^{-3} W, N_0 = 10^{-9} W/Hz, B=100kHz=100\times 10^3 Hz$.
+    - find Shannon capacity when Rx knows instantaneous g[i] but not Tx.
+      - $\gamma_1 = g_1\frac{P_t}{N_0 B} = 0.2\frac{10*10^{-3}}{10^{-9}*100*10^3} = 20$
+      - $\gamma_2 = 0.7\frac{10*10^{-3}}{10^{-9}*100*10^3} = 70$
+      - $\gamma_3 = 0.95\frac{10*10^{-3}}{10^{-9}*100*10^3} = 95$
+      - $C_1 = (100\times 10^3)log_2(1+20) = 4.3923e5 \approx 439 Kbps$
+      - $C_2 = (100\times 10^3)log_2(1+70) = 6.1497e5 \approx 615 Kbps$
+      - $C_3 = (100\times 10^3)log_2(1+95) = 6.5850e5 \approx 658 Kbps$
+      - $C_{avg} = 0.6(439) + 0.3(615) + 0.1(658) = 513.7 Kbps$
+    - compare with Shannon capacity of an AWGN channel with the same average SNR.
+      - $\gamma_{avg} = 0.6(20) + 0.3(70) + 0.1(95) = 42.5$
+      - $C = 100\times 10^3*log_2(1+42.5) = 5.443 Kbps$
+      - this C is our upper boundary for how good C can get
+      - in research we'd use $\mathbb{E}[\gamma]$ instead of exact $\gamma$ because it's hard or impossible to calculate

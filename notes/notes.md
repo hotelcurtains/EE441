@@ -374,3 +374,67 @@ wireless channel capcity
       - $C = 100\times 10^3*log_2(1+42.5) = 5.443 Kbps$
       - this C is our upper boundary for how good C can get
       - in research we'd use $\mathbb{E}[\gamma]$ instead of exact $\gamma$ because it's hard or impossible to calculate
+
+- what if i started organizing these notes in a meaningful way (impossible)
+# 4/7
+- $C = \sum_i Blog_2(1+\gamma_i)p(\gamma_i)$
+> transmitter can adapt its transmission strategy relative to the channel state information, and it will not send bits unless they can be decoded correctly.
+- $C = \sum P_i C_i$ is true $\forall i$
+- if there are multiple channel values their probabilities $P_1 : P_5$ should add up to 1
+- $C_i = Blog_2(1+SNR)$
+- $SNR_i = g_iP_t/P_N$ 
+- if Rx knows CSI (channel state information), it can optimize the transmit power
+- if only TX knows, it will send data at a constant rate or power
+- optimal power adaption that maximizes the capacity:
+  - $\gamma \geq \gamma_0 \Rrightarrow \frac{1}{\gamma_0} - \frac{1}{\gamma}$
+  - $\gamma < \gamma_0 \Rrightarrow 0$
+- $\sum_{\gamma_i \geq \gamma_0} \frac{1}{\gamma_0} - \frac{1}{\gamma_i}p(\gamma_i)=1$
+- imagine the signal levels per subchannel are below sea level. we can fill up the space between the bars and sea level (required power) by adding more water (assigned power). if they are above sea level, we allocate no additional power.
+- general expression $C = \sum_i p(\gamma_i)Blog_2(1+\gamma_i)$
+- $C_{average} = \sum_i Blog_2\frac{\gamma_i}{\gamma_0}p(\gamma_i)$
+- $\sum_i (\frac{1}{\gamma_0} - \frac{1}{\gamma_i})p_i =1$
+  - if we know all edge/failing cases then we know the minimum threshold
+
+exercise:
+- Case 1 [Rx]:
+  - $g_1=0.15; p_1=0.6; g_2; 0.64; p_2=0.4; P_t=5W; N_0=10^{-7}W/Hz; B=1MHz$
+  - $SNR_1 = \gamma_1 = g_1P_t/P_n = 7.5$
+  - $SNR_2 = \gamma_2 = g_2P_t/P_n = 32$
+  - where $P_N = N_0B$
+  - $C = B[p_1log_2(1+SNR_1) + p_2log_2(1+SNR_2)]$
+    - $= 10^6(0.6log_2(1+7.5)+0.4log_2(1+32)) = 3.87e6 bps = 3.87Mbps$
+  - check that $(\frac{1}{\gamma_0} - \frac{1}{\gamma_i})p_1 + (\frac{1}{\gamma_0}-\frac{1}{\gamma_i})p_2 = 1$
+  - we know $\gamma_0 = 9 \implies \gamma_0 < \gamma_2$
+- Case 2 [Rx & Tx]
+  - we may assume $\gamma_0 < \gamma_1$ and $\gamma_0 < \gamma_2$
+    - thus $\frac{1}{\gamma_0}=1+\frac{p_1}{\gamma_1}+\frac{p_2}{\gamma_2}$
+    - $=1+\frac{0.6}{7.5}+\frac{0.4}{32} \implies \gamma_0 = 0.915$
+  - $C_{avg} = B[p_2log_2\frac{\gamma_2}{\gamma_0} + p_1log_2\frac{\gamma_1}{\gamma_0}]$
+    - $= 10^6[0.6log_2\frac{32}{0.915} + 0.4log_2\frac{7.5}{0.915}] = 4.59e6 bps$
+  - if $p_1, p_2$ change, so will γ
+- if one of $\gamma_0 < \gamma_1$ or $\gamma_0 < \gamma_2$ fail, we will remove that channel from our calculations and it will be considered silent ($P_t = 0$)
+
+exercise 2:
+![exercise 2](IMG_5746.JPG)
+
+
+
+- zero outage capacity: maximum data rate that can be maintained in all non-outage channel states
+  - > the Tx uses the CSI to maintain a constant rx power; i.e. inverts the channel fading
+- zero-outage capacity $C_{z-0} =Blog_2[1+\sigma]=Blog_2[1+\frac{1}{\mathbb{E}[1/\gamma]}]$
+- $\mathbb{E}[1/\gamma] = \sum_i p_i/\gamma_i$
+- based on exercise 2:
+  - $\mathbb{E}[1/\gamma] = 0.5/0.1 + 0.3/1 + 0.2/10 = 5.32$
+- outage capacity and truncated channel inversion
+  - outage capacity: max data rate that can be maintained in all non-outage channel states multiplies by the probability of non-outage
+  - suspending transmission in particularly bad fading state results a higher constant data rate in other states
+- outage capacity with a truncated channel inversion policy:
+- if we use the same values as ex. 2 and cutoff value $\gamma_0 = 0.7$, $\gamma_1 < \gamma_0$ but the other 2 states pass. thus we only consider $\gamma_2, \gamma_3$
+- $C(P_{out}) = Blog_2(1+\frac{1}{\mathbb{E}_{\gamma_0}[1/\gamma_0]})p(\gamma \geq \gamma_0)$
+  - $p(\gamma \geq \gamma_0)$ is the probability of non-outage, in ex. 2 it's $p_2+p_3$ since $\gamma_1 < \gamma_0$ so we excluded it
+  - here $C = 10^5[log_2(1+\frac{1}{\mathbb{E}[1/\gamma] = 0.32})]*0.5 \approx 0.102Mbps =102 Kbps$
+- this is much simpler than the previous strategy because we start with $\gamma_0$ instead of calculating it and excluding channels over and over
+- Capacity of Frequency-Selective Channels
+  - consider a time-invariant channel with freq response H(f) known to both Tx and Rx
+  - H(f) is block-fading, so that freq is divided into subchannels of bandwidth B over each subchannel
+- we need to consider multiple transmitters, and how they share the max capacity we calculated before

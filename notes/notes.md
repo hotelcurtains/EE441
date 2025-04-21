@@ -438,3 +438,80 @@ exercise 2:
   - consider a time-invariant channel with freq response H(f) known to both Tx and Rx
   - H(f) is block-fading, so that freq is divided into subchannels of bandwidth B over each subchannel
 - we need to consider multiple transmitters, and how they share the max capacity we calculated before
+
+# 4/21
+## Medium Access Control (MAC)
+- MAC has an impact on reliability, throughput, and energy efficiency
+- defined by a rate user rather than a single number
+- data rate is in bps, energy efficiency EE is in bpJ.
+- improving data rate (by using more power) decreases energy efficiency
+- $EE = \frac{}{P_t+P_loss+P_?}$
+- we maximize R by maximizing $log(1+SNR)$
+- we want to maximize EE, so we need a rate $R \geq$ threshold $R_0$
+- or (which we won't do) maximize R by $EE \geq EE_{threshold}$
+- contention: shares the broadcast medium, carrier sensing mechanism is applies
+- there is contention-free and contention-based MCA
+  - in contention free, it is centralized and under-utilization can occur
+- contention-free protocols can be fixed or dynamic assignment
+  - fixed includes FDMA, TDMA, CDMA, SDMA
+  - in fixed, you cannot reassign a device's spot to another if it's not needed, so it's inefficient
+- contention-based includes Aloha, CSMA, MACA, MACAW
+## Time Division Multiple Access (TDMA)
+- 3d: power, time, freq
+- multiple nodes occupy the entire bandwidth
+- simple to employ
+- time synchronized; each user gets time, but no user gets the entire time
+  - prefers centralized architecture
+- static # of nodes
+  - cannot accommodate more customers
+- users cannot share time
+- $R_i = \tau_i Blog_2(1+\frac{g_iP_i}{N_i})$
+  - where $\tau_i$ is time allocated for user i, $\tau_n = T_n/T$
+  - the entire factor $Blog_2(1+\frac{g_iP_i}{N_i})$ is constant
+  - $N_i = Bn_i$
+  - $g_i=P_i/N_i$ is channel gain for the link between user i and Rx
+- $C=\sum_{i=1}^N R_i$
+- $R \propto T_i$
+### exercise
+- assume no fading
+- $Y=X+N$; $R=Blog(1+P/P_N)$
+- $P_1 = 10mW, P_2 = 20mW$
+- B=10kHz
+- $R_{sum} = R_1+R_2$
+- $R_1=B \tau_1 log_2(1+SNR_1)$
+- $R_2=B \tau_2 log_2(1+SNR_2)$
+- one user is able to send information at a time due to time division
+- given $\tau_1 = 0.3, \tau_1+\tau_2=1$
+- because we only have 2 channels, $\tau_2 = 1-\tau_1 = 0.7$
+- $SNR_1 = P_1/P_N = (10e-3)/(N_1B)=(10e-3)/(1e-9*10e3)=10e3$
+- $SNR_2 = P_2/N_2B = (20e-3)/(10^-8 * 10e3)=2e3$
+- $R_1 = 10e3[0.3log_2(1+10e3)]\approx 39.86e3bps$
+- $R_2 = 10e3[0.7log_2(1+2e3)]\approx 76.76e3bps$
+- $R_{sum}= R_1+R_2 = 116.62 kbps$
+- is this the maximum?
+- maximize $R_1+R_2$ given $\tau_1 + \tau_2 \leq 1$
+### exercise
+- $R_1 = 0.3Mbps; R_2=?; P_t = 20mW; N_1=10^{-9}W/Hz; N_2=10^{-8}W/Hz; B=0.1MHz$
+- $R_1 = B\tau_1log_2(1+SNR_1)$ where $SNR = P_1/N_1B = 20e-3/(1e-9*0.1e6)= 200$
+- $R_1 = 0.3e6 = (0.1e6)\tau_1log_2(1+200) \implies \tau_1 \approx 0.39$
+- $\tau_2 = 1-\tau_1 = 0.61$
+- $SNR_2 = P_2/N_2B = 20e-3/(1e-8*.1e6) \approx 2$
+- sometimes we will get an optimization solution where we make one user silent; which is correct, but not what we want to do
+- we can also only look for solutions where x+y *=* 1 instead of $x+y\leq 1$, so we're maximizing our usage of allocated resources
+## Frequency Division Multiple Access (FDMA)
+- let user communicate ll the time, but restrict freq instead
+- $R_i = B_ilog_2(1+\frac{g_iP_i}{N_iB_i})$
+  - no τ; the bandwidth now changes per user
+  - thus only the factor $log_2(1+\frac{g_iP_i}{N_i})$ is constant
+- noise is dependent upon bandwidth; less bandwidth means less possible noise
+### exercise
+- $P_t = 20mW; N_1 = 1e-9 W/Hz; N_2 = 1e-8W/Hz; R_1 = 0.1Mbps; B_{total}=0.1MHz; R_2=?$, assuming no fading ($g=0$)
+- first: assume $B_1=B_2 = (0.1/2)*10^6$
+- $R_1 = B_1log_2(1+(P_1/N_1B_1)) = ((0.1/2)*10^6)log_2[1+(P_1/(1e-9)((0.1/2)*10^6))]\implies P_1 = 3.15*10^{-3}$
+- $P_1+P_2=20mW \implies P_2 = 20-3.15 = 16.85 mW$
+- $R_2 = B_2log_2[1+P_2/N_2B_2] = (0.1/2)*10^6log_2[1+\frac{16.85e-3}{10^{-9}(0.1/2)*10^6}] \approx 255.9 kbps$
+- compare this to the exercise with TDMA which had the same numbers but a smaller $R_2$.
+
+now do it again except $B_1 = 0.25B; B_2 = 0.75B$
+- $R_1 = 0.3e6 = (0.25*0.1e6)log_2(1+\frac{P_1}{1e-9(.25*0.1e6)}) \implies P_1 = 0.102375$
+- given $P_1+P_2=20mW \implies P_2 = (20e-3)-0.102375 = whargever$

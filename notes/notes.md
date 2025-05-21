@@ -515,3 +515,97 @@ exercise 2:
 now do it again except $B_1 = 0.25B; B_2 = 0.75B$
 - $R_1 = 0.3e6 = (0.25*0.1e6)log_2(1+\frac{P_1}{1e-9(.25*0.1e6)}) \implies P_1 = 0.102375$
 - given $P_1+P_2=20mW \implies P_2 = (20e-3)-0.102375 = whargever$
+
+# 4/28
+- successive interference cancellation (SIC):
+  - the receiver receives and decodes the data of user 2, then it can reconstruct user 2's signal and subtract it from the aggregate received signal. then it can decode the data of user 1. since we can now subtract both signals and get just the background gaussian noise, user 1 can transmit its single-user bound.
+- ${C_1}_{max} = Blog_2 (1+\frac{P_n}{P_N+I_1})$
+- for two users, $I_1 = P_2$; $I_2= P_1$
+- for three users, $I_1 = P_2+P_3; I_2 = I_1 + I_2; I_3 = P_1+P_2$
+- etc.
+- used when many users are concurrently sending a signal to the same receiver
+- to max TDMA, we have to silence user 1 or 2.
+- the max of FDMA is lower than the max of SIC
+- SIC's best case data rate is $R= log(1+\frac{P_2}{N_0})$, its worst case is $R = log(1+\frac{P_2}{P_1 + N_0})$
+- whichever user SIC decodes first gets the best case, the other gets the worst case
+  - order denoted as (1,2) for user 1 then user 2
+- we can do time division on SIC given percent of time $tau_1$ we spend prioritizing each user
+  - $\tau_1 {C_1}_{max} +(1-\tau_1){C_2}_{max}$ 
+- with 2 users, user 2 has no interference ⇔ user 1 has interference
+- $P_N = N_{this}B$
+- total transmit power $P_t = P_1 + P_2$
+## exercise:
+consider a MAC channel in AWGN with transmit power $P_1 = 200mw$ and $P_2= 100mW$ and channel gains $g_1=.8$ for user 1 and $g_2 = .1$ for user 2. assume the receiver noise has $N_0 = 10^{-11} W/Hz$ and $B=10MHz$. find the rate that user 2 can achieve if user 1 requires a rate of
+- $R_1 = 35 Mbps$
+  - $R_{max} = Blog_2(1+\frac{g_1P_1}{P_N}) =10^7log_2(1+\frac{0.8*200*10^{-3}}{10^{-11}*10^7})= 106.4Mbps$
+  - $R_{min} = Blog_2(1+\frac{g_1P_1}{P_N+g_2P_2})= Blog_2(1+\frac{0.8*200*10^{-3}}{10^{-4}+0.1*100*10^{-3}}) =  40.9Mbps$
+  - $R_1(=35Mbps)<{R_1}_{min}(=40.9Mbps) \implies R_2={R_2}_{max}$
+- $R_1 = 115 Mbps$
+  - $R_1>R_{max}$. this case is impossible. thus $R_1=0, R_2=0$.
+- $R_1 = 55 Mbps$
+  - ${R_1}_{min}<R_1<{R_1}_{max}$, thus we use time-sharing
+  - $R_1 = \tau_1 R_1^{max} + (1-\tau_1)R_1^{min}$
+    - recall that in $R_1^{max}$, we assume decode order (2,1), and order (1,2) for $R_1^{min}$
+  - $55 = \tau_1(106.4) + (1-\tau_1)40.9 \implies \tau_1 = 0.215$
+  - we still need $R_2$
+    - $R_2^{min} = Blog(1+\frac{g_2P_2}{P_N+g_1P_1}) = 10^7log(1+\frac{0.1*100*10^{-3}}{10^{-4}+0.8*100*10^{-3}})=0.875 Mbps$
+  - $R_2= (0.215)(0.875)+(1-0.215)(66.58) = 52.45 Mbps$
+
+## Contention-Based/Random Access Protocols
+### Pure ALOHA
+- user transmits data packets as soon as they are formed
+- simultaneous transmissions cause packet loss
+  - they might send at the same time or user 2 starts sending before user 1 is done sending 
+- random wait time before retransmission
+- pure ALOHA has throughput $T=Te^{-2L}$ with max of $18.4\%$ of what it would be with only one user, which makes it very inefficient
+### Slotted ALOHA
+- time is slotted and transmission times are synchronized
+- throughput $T=Te^{-L}$ with max being $37\%$ of what it would be with only one user, which is STILL quite inefficient.
+### Carrier Sense Multiple Access
+- ensures fewer collisions, performs better under heavy load
+- users check if Rx is busy or idle before sending data packets
+- collision due to propagation delay (time needed for a signal to propagate from one end of the medium to the other)
+### 1-persistent CSMA
+- node senses the channel/wireless medium
+  - free: transmit immediately (probability 1)
+  - busy: keep sensing until channel is free
+- highest chance of collision (false detection)
+- performance depends on propagation delay
+- no problem if only 1 user
+- when multiple users, multiple users sending at the same time will all send their packets at the same exact time (whenever the Rx is free)
+### non-persistent CSMA
+- node senses the wireless channel
+  - idle: transmit
+  - busy: wait for random period (not continuously) then sense again
+    - the random backoff avoids multiple users simultaneously transmitting as soon as the channel of free, minimizing collisions.
+- capacity is wasted because the medium generally remains idle even if $\geq1$ stations are waiting to transmit
+  - i.e. a random amount of time is usually wasted because nobody starts transmitting again instantly when Rx goes idle again
+### p-persistent CSMA
+- node senses the medium
+  - idle: transmit with probability p. if not transmitted (with probability q = 1-p), wait some time before checking again.
+  - busy: check persistently until Rx is idle
+- will not waste time, has least chance so far of packet collision
+### hidden and exposed terminal problems
+- collision of packets at a receiving node due to the simultaneous transmission of those nodes that are not within the direct transmission range of the sender, but are within the transmission range of the receiver.
+- hidden terminal problem: not all users can contact each other, but they can all contact the Rx.
+- exposed terminal problem: users can contact each other, but they are using different Rx that cannot reach each other.
+- A Mac protocol should grant channel access to nodes in such a manner that collisions are minimized.
+### Multiple Access Collision Avoidance (MACA) Protocol
+- users must send request-to-send and Rx returns clear-to-send if clear (and only to that Tx), only then can Tx send the data
+- both RTS and CTS signal are sent to everyone, and thus other Txs know that the Rx will be busy
+- when Rx finished receiving, is sends acknowledgment signal ACK, now everyone knows that it is free again
+- ![timelines for MACA](IMG_5804.jpg)
+
+## Exam info
+- 1: conceptual
+  - multipass fading
+  - small-scale fading
+  - channel inversion
+  - TDMA vs FDMA, differences?
+  - contention-based vs contention-free transmission, differences in general?
+- 2: FRQ
+  - 1 like today, CDMA
+  - same problem but using TDMA
+- 3: FRQ
+  - shannon capacity
+  - knowing that channel state information, find channel capacity and zero-outage capacity
